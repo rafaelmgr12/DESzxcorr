@@ -12,11 +12,8 @@ import argparse
 import numpy as np
 import healpy as hp
 import query as qr
-import galaxies_pixel as gal
-import flags as fl
-import strips as st
+import pandas as pd
 import write_read_fits as wr
-import maxnside as mx
 import file_verification as ver
 from time import time,strftime, gmtime
 
@@ -45,21 +42,21 @@ nside           = config.getint(    "General","nside")
 mag_auto        = config.getint(	"General",'mag_auto')
 restart         = config.getboolean("General","restart")
 
-use_constraint  = config.getboolean("Constraint","use")
-type_constraint = config.get(       "Constraint","type")
-band_constraint = config.get(       "Constraint","band")
+#use_constraint  = config.getboolean("Constraint","use")
+#type_constraint = config.get(       "Constraint","type")
+#band_constraint = config.get(       "Constraint","band")
 
-use_flags       = config.getboolean("Flags","use")
-table_flags     = config.getint(    "Flags","table")
-band_flags      = config.get(       "Flags","band")
-hex_flags       = config.get(       "Flags","hexadecimal")
+#use_flags       = config.getboolean("Flags","use")
+#table_flags     = config.getint(    "Flags","table")
+#band_flags      = config.get(       "Flags","band")
+#hex_flags       = config.get(       "Flags","hexadecimal")
 
-try:
-	pixels  = json.loads(config.get( "pixels_sky", "pixels"))
-	for i in range(len(pixels)): 
-		pixels[i]=int(pixels[i])
-except:
-	raise NameError
+#try:
+#	pixels  = json.loads(config.get( "pixels_sky", "pixels"))
+#	for i in range(len(pixels)): 
+#		pixels[i]=int(pixels[i])
+#except:
+#	raise NameError
 
 ###############################################################################
 #You can modify any options in the parameters.ini file by the command terminal
@@ -73,16 +70,16 @@ parser.add_argument('--nside'          , action = 'store', dest = 'nside'       
 parser.add_argument('--mag_auto'          , action = 'store', dest = 'mag_auto'          , default = mag_auto          , help = '')
 parser.add_argument('--restart'        , action = 'store', dest = 'restart'        , default = restart        , help = '')
 
-parser.add_argument('--use_constraint' , action = 'store', dest = 'use_constraint' , default = use_constraint , help = '')
-parser.add_argument('--type_constraint', action = 'store', dest = 'type_constraint', default = type_constraint, help = '')
-parser.add_argument('--band_constraint', action = 'store', dest = 'band_constraint', default = band_constraint, help = '')
+#parser.add_argument('--use_constraint' , action = 'store', dest = 'use_constraint' , default = use_constraint , help = '')
+#parser.add_argument('--type_constraint', action = 'store', dest = 'type_constraint', default = type_constraint, help = '')
+#parser.add_argument('--band_constraint', action = 'store', dest = 'band_constraint', default = band_constraint, help = '')
 
-parser.add_argument('--use_flags'      , action = 'store', dest = 'use_flags'      , default = use_flags      , help = '')
-parser.add_argument('--table_flags'    , action = 'store', dest = 'table_flags'    , default = table_flags    , help = '')
-parser.add_argument('--band_flags'     , action = 'store', dest = 'band_flags'     , default = band_flags     , help = '')
-parser.add_argument('--hex_flags'      , action = 'store', dest = 'hex_flags'      , default = hex_flags      , help = '')
+#parser.add_argument('--use_flags'      , action = 'store', dest = 'use_flags'      , default = use_flags      , help = '')
+#parser.add_argument('--table_flags'    , action = 'store', dest = 'table_flags'    , default = table_flags    , help = '')
+#parser.add_argument('--band_flags'     , action = 'store', dest = 'band_flags'     , default = band_flags     , help = '')
+#parser.add_argument('--hex_flags'      , action = 'store', dest = 'hex_flags'      , default = hex_flags      , help = '')
 
-parser.add_argument('--pixels'         , action = 'store', dest = 'pixels'         , default = pixels         , nargs='+', type=int, help = '')
+#parser.add_argument('--pixels'         , action = 'store', dest = 'pixels'         , default = pixels         , nargs='+', type=int, help = '')
 
 ###############################################################################
 #Variables
@@ -95,16 +92,16 @@ nside           = int(arguments.nside)
 mag_auto		= int(arguments.mag_auto)
 restart         = bool(arguments.restart)
 
-use_constraint  = bool(arguments.use_constraint)
-type_constraint = str(arguments.type_constraint)
-band_constraint = str(arguments.band_constraint)
+#use_constraint  = bool(arguments.use_constraint)
+#type_constraint = str(arguments.type_constraint)
+#band_constraint = str(arguments.band_constraint)
 
-use_flags       = bool(arguments.use_flags)
-table_flags     = int(arguments.table_flags)
-band_flags      = str(arguments.band_flags)
-hex_flags       = int(arguments.hex_flags,16)
+#use_flags       = bool(arguments.use_flags)
+#table_flags     = int(arguments.table_flags)
+#band_flags      = str(arguments.band_flags)
+#hex_flags       = int(arguments.hex_flags,16)
 
-pixels          = list(arguments.pixels)
+#pixels          = list(arguments.pixels)
 
 ###############################################################################
 # inputs
@@ -112,13 +109,13 @@ pixels          = list(arguments.pixels)
 
 NSIDE          = nside
 MAG 		   = mag_auto
-constraints    = {"use":use_constraint, "type":type_constraint, "band": band_constraint} 
-params_flags   = {"use":use_flags, "table":table_flags, "band":band_flags}
-hexa_query     = hex_flags
+#constraints    = {"use":use_constraint, "type":type_constraint, "band": band_constraint} 
+#params_flags   = {"use":use_flags, "table":table_flags, "band":band_flags}
+#hexa_query     = hex_flags
 
-del use_constraint, type_constraint, band_constraint, use_flags, table_flags,band_flags
+#del use_constraint, type_constraint, band_constraint, use_flags, table_flags,band_flags
 ###############################################################################
-# Access PS1 server
+# Access DES server
 ###############################################################################
 
 try: # Python 3.x
@@ -152,12 +149,19 @@ params              = {"NSIDE":NSIDE,"MAG":MAG ,"NPIX":NPIX}
 print("You'll use")
 print("NSIDE      : {} ({})".format(params['NSIDE'],nside))
 del nside
-if not ver.verification_pix(params,restart): 
+print("\nCheck the pixel list\n")
+if not ver.verification_pix(params,restart):
+	print('Do not exist\nDonwloading\n')
 	strips = qr.query_pix(params)
 	len_strips = len(strips)
 else :
-	strips = np.loadtxt('PIXELS/PixelList.txt')
+	print('Exist\nReading\n')
+	read = np.loadtxt('PIXELS/PixelList.txt')
+	pixel = pd.DataFrame(read,columns=['HPIX_'+str(params['NSIDE'])])
+	strips = pixel['HPIX_'+str(params['NSIDE'])].astype(int)
 	len_strips = len(strips)
+
+
 print("\n\n")
 time0 = time()
 for num,pix in enumerate(strips):
@@ -169,8 +173,6 @@ for num,pix in enumerate(strips):
 	if not ver.exist_or_not_file(params,restart):
 		print(ver.exist_or_not_file(params,restart))
 		tab        		 = qr.query_function(params)
-		#tab             = gal.galaxies_pixel(tab,params)
-		#tab             = fl.flags_constraints(tab,hexa_query,params_flags)
 			
 		timef           = strftime('%H:%M:%S', gmtime(time()-timei))
 			
@@ -183,3 +185,4 @@ for num,pix in enumerate(strips):
 		print("\n\n")
 	
 print("End Programm: {0}".format(time0-time()))
+

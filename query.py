@@ -43,7 +43,6 @@ def query_string(params):
             (CASE WHEN spread_model_i - 1.*spreaderr_model_i > 0.003 THEN 1 ELSE 0 END) ) = 3
             AND spread_model_i BETWEEN -0.05 AND 0.05
             AND imaflags_iso_i = 0
-            AND flags_i < 1
             AND hpix_"""+str(params['NSIDE'])+""" = """+str(params['pixel'])+"""
         """
         return query

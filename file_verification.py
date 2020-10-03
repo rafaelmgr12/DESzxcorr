@@ -1,5 +1,5 @@
 import os,sys
-	
+import healpy as hp
 def file_verification(path,filename,directory):
 	
 	if type(directory)==int or type(directory)==float:
@@ -55,7 +55,8 @@ def exist_or_not_file(params,restart):
 	if not restart:
 		str_npix      = str(params['NPIX'])
 		str_nside     = str(params['NSIDE'])
-		str_pix       = str(int(params['pixel']))
+		pixel         = hp.nest2ring(params['NSIDE'],int(params['pixel']))
+		str_pix       = str(pixel)
 		len_str_npix  = len(str_npix)
 		len_str_pix   = len(str_pix)
 		len_zero      = len_str_npix - len_str_pix
@@ -70,16 +71,9 @@ def exist_or_not_file(params,restart):
 		raise NameError
 def verification_pix(params,restart):
 	if not restart:
-		str_npix      = str(params['NPIX'])
-		str_nside     = str(params['NSIDE'])
-		str_pix       = str(int(params['pixel']))
-		len_str_npix  = len(str_npix)
-		len_str_pix   = len(str_pix)
-		len_zero      = len_str_npix - len_str_pix
-		file_ = "_".join(("PixelList",str_nside,"0"*len_zero+str_pix))
-		file_ = ".".join((file_,"txt"))
-		path = os.getcwd()
-		path = os.path.join(path,"PIXELS",str_nside,file_)
+		file_ = ("PixelList.txt")
+		
+		path = os.path.join("PIXELS",file_)
 		return os.path.isfile(path)
 	elif restart:
 		return False
